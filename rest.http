@@ -1,0 +1,60 @@
+### GET /
+GET http://localhost:8080 HTTP/1.1
+
+### POST /auth/signup
+POST http://localhost:8080/auth/signup HTTP/1.1
+Content-Type: application/json
+
+{
+  	"username": "johnguzej",
+  	"password": "John123!",
+  	"confirm_password": "John123!"
+}
+
+### POST /auth/signin
+POST http://localhost:8080/auth/signin HTTP/1.1
+Content-Type: application/json
+
+{
+  	"username": "johnguzej",
+  	"password": "John123!"
+}
+
+### GET /me
+GET http://localhost:8080/me HTTP/1.1
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlMS1hZmU5LTQyZmQtOWQ3Ni00ZmI4MzlmOTVkODciLCJ1c2VybmFtZSI6ImpvaG5ndXplaiIsImlhdCI6MTcyNjEzMzMzNCwiZXhwIjoxNzI2MTM0MjM0fQ.6RsWwdjJQEIIqdKTaxng1LylL_K7BTICGiGkva7qEsY
+
+### POST /auth/signout
+POST http://localhost:8080/auth/signout HTTP/1.1
+
+### GET /users
+GET http://localhost:8080/users HTTP/1.1
+
+### GET /orders
+GET http://localhost:8080/orders HTTP/1.1
+
+### GET /orders/chart
+GET http://localhost:8080/orders/chart HTTP/1.1
+
+### GET /permissions
+GET http://localhost:8080/permissions HTTP/1.1
+
+### POST /permissions
+POST http://localhost:8080/permissions HTTP/1.1
+Content-Type: application/json
+
+{
+	"name": "view_orders"
+}
+
+### GET /roles
+GET http://localhost:8080/roles HTTP/1.1
+
+### POST /roles
+POST http://localhost:8080/roles HTTP/1.1
+Content-Type: application/json
+
+{
+	"name": "Admin",
+	"permissions": ["58571811-2740-4f62-9a2f-e7366a5a461d"]
+}
