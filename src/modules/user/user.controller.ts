@@ -1,4 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common'
 import { UserService } from './user.service'
 import { User } from 'entities/user.entity'
 import { UpdateUserDto } from './dto/update-user.dto'
@@ -12,15 +22,14 @@ export class UserController {
   @UseGuards(AuthGuard('jwt'))
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(@GetCurrentUserById() userId: string): Promise<User[]> {
-    console.log('findAll()', userId)
-    return this.usersService.findAll()
+  @UseInterceptors(ClassSerializerInterceptor)
+  async findCurrentUser(@GetCurrentUserById() userId: string): Promise<User> {
+    return this.usersService.findById(userId)
   }
 
   @Patch('/update-password')
   @HttpCode(HttpStatus.OK)
   async update(@Body() updateUserDto: UpdateUserDto, @GetCurrentUserById() userId: string): Promise<User> {
-    // TODO
     return this.usersService.update(userId, updateUserDto)
   }
 }
