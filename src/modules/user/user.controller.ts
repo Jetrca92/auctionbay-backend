@@ -27,8 +27,10 @@ export class UserController {
     return this.usersService.findById(userId)
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Patch('/update-password')
   @HttpCode(HttpStatus.OK)
+  @UseInterceptors(ClassSerializerInterceptor)
   async update(@Body() updateUserDto: UpdateUserDto, @GetCurrentUserById() userId: string): Promise<User> {
     return this.usersService.update(userId, updateUserDto)
   }
