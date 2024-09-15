@@ -36,4 +36,10 @@ export class Auction extends Base {
 
   @OneToMany(() => Bid, (bid) => bid.auction)
   bids: Bid[]
+
+  get end_time(): Date {
+    const start = this.created_at
+    const durationInMillis = this.auction_duration_hrs * 3600000
+    return new Date(start.getTime() + durationInMillis)
+  }
 }

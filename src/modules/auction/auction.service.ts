@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common'
+import { ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Auction } from 'entities/auction.entity'
 import { AbstractService } from 'modules/common/abstract.service'
@@ -27,7 +20,7 @@ export class AuctionService extends AbstractService {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } })
       if (!user) {
-        throw new BadRequestException('User not found')
+        throw new NotFoundException('User not found')
       }
       const newAuction = this.auctionRepository.create({ ...createAuctionDto, owner: user })
       Logger.log(`Creating new auction ${newAuction.title} by ${userId} user id.`)
@@ -53,6 +46,15 @@ export class AuctionService extends AbstractService {
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Something went wrong while updating the auction.')
+    }
+  }
+
+  async findActiveAuctions(): Promise<Auction[]> {
+    try {
+      const activeAuctions = (await this.auctionRepository.find({ where: { is_active: true } })) as Auction[]
+      return activeAuctions
+    } catch (error) {
+      throw new InternalServerErrorException(error)
     }
   }
 }

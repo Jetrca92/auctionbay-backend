@@ -34,8 +34,8 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlM
   	"confirm_password": "John123!" 
 }
 
-### GET /me/auction
-GET http://localhost:8080/me/auction HTTP/1.1
+### GET /auctions
+GET http://localhost:8080/auctions HTTP/1.1
 
 ### POST /me/auction
 POST http://localhost:8080/me/auction HTTP/1.1
