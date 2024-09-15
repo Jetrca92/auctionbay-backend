@@ -34,14 +34,26 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlM
   	"confirm_password": "John123!" 
 }
 
+### GET /me/auction
+GET http://localhost:8080/me/auction HTTP/1.1
+
 ### POST /me/auction
 POST http://localhost:8080/me/auction HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlMS1hZmU5LTQyZmQtOWQ3Ni00ZmI4MzlmOTVkODciLCJ1c2VybmFtZSI6ImpvaG5ndXplaiIsImlhdCI6MTcyNjM5MzQ5NiwiZXhwIjoxNzI2Mzk0Mzk2fQ.LQ5nBCmfshmtFKAeizvlSsPO3WK7tUZnemNYGdcTUl0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlMS1hZmU5LTQyZmQtOWQ3Ni00ZmI4MzlmOTVkODciLCJ1c2VybmFtZSI6ImpvaG5ndXplaiIsImlhdCI6MTcyNjQyNTQ3MiwiZXhwIjoxNzI2NDI2MzcyfQ.FKG6DIFJgMgzSCPBs47eJigQZe1TKFqo81Gz4W_8xlc
 
 {
-	"title": "Test auction",
+	"title": "Test auction 12341",
 	"description": "This is a posting of a test auction",
-	"starting_price": 10,
-	"auction_duration_hrs": 2
+	"starting_price": 100,
+	"auction_duration_hrs": 20
+}
+
+### PATCH /me/auction/:id
+PATCH http://localhost:8080/me/auction/734ec6f4-4fef-44f2-a2c9-5c3334989070 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlMS1hZmU5LTQyZmQtOWQ3Ni00ZmI4MzlmOTVkODciLCJ1c2VybmFtZSI6ImpvaG5ndXplaiIsImlhdCI6MTcyNjQyNTQ3MiwiZXhwIjoxNzI2NDI2MzcyfQ.FKG6DIFJgMgzSCPBs47eJigQZe1TKFqo81Gz4W_8xlc
+
+{
+	"is_active": true
 }
