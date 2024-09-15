@@ -33,3 +33,15 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlM
   	"password": "John123!", 
   	"confirm_password": "John123!" 
 }
+
+### POST /me/auction
+POST http://localhost:8080/me/auction HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlMS1hZmU5LTQyZmQtOWQ3Ni00ZmI4MzlmOTVkODciLCJ1c2VybmFtZSI6ImpvaG5ndXplaiIsImlhdCI6MTcyNjM5MzQ5NiwiZXhwIjoxNzI2Mzk0Mzk2fQ.LQ5nBCmfshmtFKAeizvlSsPO3WK7tUZnemNYGdcTUl0
+
+{
+	"title": "Test auction",
+	"description": "This is a posting of a test auction",
+	"starting_price": 10,
+	"auction_duration_hrs": 2
+}

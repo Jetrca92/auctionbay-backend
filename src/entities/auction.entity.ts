@@ -26,7 +26,7 @@ export class Auction extends Base {
   @IsNumber()
   auction_duration_hrs: number
 
-  @Column()
+  @Column({ default: true })
   @IsBoolean()
   is_active: boolean
 

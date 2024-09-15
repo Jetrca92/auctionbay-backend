@@ -17,14 +17,14 @@ import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
 
 @Controller('me')
 export class UserController {
-  constructor(private readonly usersService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async findCurrentUser(@GetCurrentUserById() userId: string): Promise<User> {
-    return this.usersService.findById(userId)
+    return this.userService.findById(userId)
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -32,6 +32,6 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   @UseInterceptors(ClassSerializerInterceptor)
   async update(@Body() updateUserDto: UpdateUserDto, @GetCurrentUserById() userId: string): Promise<User> {
-    return this.usersService.update(userId, updateUserDto)
+    return this.userService.update(userId, updateUserDto)
   }
 }
