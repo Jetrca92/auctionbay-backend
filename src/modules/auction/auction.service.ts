@@ -1,4 +1,11 @@
-import { ForbiddenException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Auction } from 'entities/auction.entity'
 import { AbstractService } from 'modules/common/abstract.service'
@@ -6,12 +13,15 @@ import { CreateAuctionDto } from 'modules/auction/dto/create-auction.dto'
 import { Repository } from 'typeorm'
 import { User } from 'entities/user.entity'
 import { UpdateAuctionDto } from './dto/update-auction.dto'
+import { CreateBidDto } from './dto/create-bid.dto'
+import { Bid } from 'entities/bid.entity'
 
 @Injectable()
 export class AuctionService extends AbstractService {
   constructor(
     @InjectRepository(Auction) private readonly auctionRepository: Repository<Auction>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Bid) private readonly bidRepository: Repository<Bid>,
   ) {
     super(auctionRepository)
   }
@@ -26,7 +36,7 @@ export class AuctionService extends AbstractService {
       Logger.log(`Creating new auction ${newAuction.title} by ${userId} user id.`)
       return this.auctionRepository.save(newAuction)
     } catch (error) {
-      Logger.log(error)
+      Logger.error(error)
       throw new InternalServerErrorException('Something went wrong while creating a new auction.')
     }
   }
@@ -56,5 +66,33 @@ export class AuctionService extends AbstractService {
     } catch (error) {
       throw new InternalServerErrorException(error)
     }
+  }
+
+  async createBid(auctionId: string, userId: string, createBidDto: CreateBidDto): Promise<Bid> {
+    try {
+      const user = await this.userRepository.findOne({ where: { id: userId } })
+      if (!user) throw new NotFoundException('User not found')
+      const auction = await this.auctionRepository.findOne({ where: { id: auctionId }, relations: ['owner'] })
+      if (!auction) throw new NotFoundException('Auction not found')
+      if (auction.owner.id === user.id) throw new BadRequestException('You cant bid on your own auction')
+      const highest_bid = await this.findHighestBid(auctionId)
+      if (highest_bid && highest_bid.amount <= createBidDto.amount) {
+        throw new BadRequestException('Your bid must be higher than the current bid')
+      }
+      const newBid = this.bidRepository.create({ ...createBidDto, owner: user, auction: auction })
+      Logger.log(`Creating new bid by ${userId} user id.`)
+      return this.bidRepository.save(newBid)
+    } catch (error) {
+      Logger.error(error)
+      throw new InternalServerErrorException('Something went wrong while creating a new bid.')
+    }
+  }
+
+  async findHighestBid(auctionId: string): Promise<Bid> {
+    return this.bidRepository
+      .createQueryBuilder('bid')
+      .where('bid.auctionId = :auctionId', { auctionId })
+      .orderBy('bid.amount', 'DESC')
+      .getOne()
   }
 }

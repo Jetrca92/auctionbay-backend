@@ -10,7 +10,7 @@ export class Bid extends Base {
   @JoinColumn({ name: 'user_id' })
   owner: User
 
-  @Column()
+  @Column('decimal')
   @IsNumber()
   amount: number
 
