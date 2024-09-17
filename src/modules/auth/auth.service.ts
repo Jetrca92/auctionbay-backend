@@ -1,5 +1,5 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common'
-import { SigninDto, SignupDto } from './dto'
+import { LoginDto, SignupDto } from './dto'
 import { UserService } from 'modules/user/user.service'
 import { JwtService } from '@nestjs/jwt'
 import { User } from 'entities/user.entity'
@@ -11,7 +11,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
   ) {}
-  async signin(dto: SigninDto) {
+  async login(dto: LoginDto) {
     Logger.log('Validating user ...')
     const user = await this.userService.findBy({ username: dto.username })
     if (!user) throw new UnauthorizedException('Invalid credentials')
