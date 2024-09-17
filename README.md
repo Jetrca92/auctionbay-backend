@@ -23,10 +23,9 @@ npm run start
 npm run test
 ```
 
-## Author
+### Disclaimer
 
-- Github: [@Jetrca92](https://github.com/Jetrca92)
-- LinkedIn: [@blaž-guzej-869217231](https://linkedin.com/in/blaž-guzej-869217231)
+This is an assignment from SkillUp Mentor and it is protected with SkillUp Mentor copyright. Any other reproduction and distribution of the assignment itself or the assignment's solutions without written permission of SkillUp Mentor is prohibited.
 
 ## Show your support
 
