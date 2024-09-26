@@ -15,9 +15,9 @@ export class UserService extends AbstractService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = await this.findBy({ username: createUserDto.username })
+    const user = await this.findBy({ email: createUserDto.email })
     if (user) {
-      throw new BadRequestException('User with that username already exists.')
+      throw new BadRequestException('User with that email already exists.')
     }
     try {
       const newUser = this.userRepository.create({ ...createUserDto })
@@ -30,9 +30,9 @@ export class UserService extends AbstractService {
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = (await this.findById(id)) as User
-    const { username, password, confirm_password } = updateUserDto
-    if (user.username !== username && username) {
-      user.username = username
+    const { email, password, confirm_password } = updateUserDto
+    if (user.email !== email && email) {
+      user.email = email
     }
     if (password && confirm_password) {
       if (password !== confirm_password) {

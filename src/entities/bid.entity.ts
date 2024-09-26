@@ -14,7 +14,7 @@ export class Bid extends Base {
   @IsNumber()
   amount: number
 
-  @ManyToOne(() => Auction, (auction) => auction.bids)
+  @ManyToOne(() => Auction, (auction) => auction.bids, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'auction_id' })
   auction: Auction
 }

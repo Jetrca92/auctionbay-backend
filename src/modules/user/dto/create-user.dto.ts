@@ -2,18 +2,21 @@ import { ApiProperty } from '@nestjs/swagger'
 import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator'
 import { Match } from 'decorators/match.decorator'
 
-/* I'm guessing it's best practice to use validation decorations only 
-on dtos and not also on entities? I left them on both for the time being*/
 export class CreateUserDto {
-  @ApiProperty({ required: true })
-  @IsNotEmpty()
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
-  username: string
+  first_name?: string
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsString()
+  last_name?: string
+
+  @ApiProperty({ required: true })
+  @IsNotEmpty()
   @IsEmail()
-  email?: string
+  email: string
 
   @ApiProperty({ required: true })
   @IsNotEmpty()

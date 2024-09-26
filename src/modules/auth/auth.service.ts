@@ -13,7 +13,7 @@ export class AuthService {
   ) {}
   async login(dto: LoginDto) {
     Logger.log('Validating user ...')
-    const user = await this.userService.findBy({ username: dto.username })
+    const user = await this.userService.findBy({ email: dto.email })
     if (!user) throw new UnauthorizedException('Invalid credentials')
     if (!(await compareHash(dto.password, user.password))) throw new UnauthorizedException('Invalid credentials')
 
@@ -29,6 +29,6 @@ export class AuthService {
   }
 
   async generateJwt(user: User): Promise<string> {
-    return this.jwtService.signAsync({ sub: user.id, username: user.username })
+    return this.jwtService.signAsync({ sub: user.id, username: user.email })
   }
 }

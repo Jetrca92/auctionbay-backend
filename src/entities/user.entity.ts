@@ -5,18 +5,21 @@ import { Auction } from './auction.entity'
 import { Bid } from './bid.entity'
 import { IsEmail, IsOptional, IsString } from 'class-validator'
 
-/* Should I use validation decorations directly on entities? 
-Or is it better to just use them on dtos? */
 @Entity()
 export class User extends Base {
   @Column({ unique: true })
-  @IsString()
-  username: string
+  @IsEmail()
+  email: string
 
   @Column({ nullable: true })
-  @IsEmail()
+  @IsString()
   @IsOptional()
-  email: string
+  first_name?: string
+
+  @Column({ nullable: true })
+  @IsString()
+  @IsOptional()
+  last_name?: string
 
   @Column()
   @IsString()

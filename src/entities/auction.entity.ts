@@ -30,7 +30,7 @@ export class Auction extends Base {
   @IsBoolean()
   is_active: boolean
 
-  @ManyToOne(() => User, (user) => user.auctions)
+  @ManyToOne(() => User, (user) => user.auctions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   owner: User
 
