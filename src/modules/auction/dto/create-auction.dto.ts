@@ -24,8 +24,8 @@ export class CreateAuctionDto {
 
   @ApiProperty({ required: true })
   @IsNotEmpty()
-  @IsNumber()
-  auction_duration_hrs: number
+  @IsString()
+  end_date: string
 
   @ApiProperty({ required: true })
   @IsNotEmpty()

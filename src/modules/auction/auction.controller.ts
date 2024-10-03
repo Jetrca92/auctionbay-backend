@@ -16,7 +16,7 @@ export class AuctionController {
   async findAuctions(): Promise<Auction[]> {
     const activeAuctions = await this.auctionService.findActiveAuctions()
 
-    return activeAuctions.sort((a, b) => a.end_time.getTime() - b.end_time.getTime())
+    return activeAuctions.sort((a, b) => a.getEndDateAsDate().getTime() - b.getEndDateAsDate().getTime())
   }
 
   @UseGuards(AuthGuard('jwt'))

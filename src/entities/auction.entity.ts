@@ -23,8 +23,8 @@ export class Auction extends Base {
   starting_price: number
 
   @Column()
-  @IsNumber()
-  auction_duration_hrs: number
+  @IsString()
+  end_date: string
 
   @Column({ default: true })
   @IsBoolean()
@@ -37,9 +37,16 @@ export class Auction extends Base {
   @OneToMany(() => Bid, (bid) => bid.auction)
   bids: Bid[]
 
-  get end_time(): Date {
-    const start = this.created_at
-    const durationInMillis = this.auction_duration_hrs * 3600000
-    return new Date(start.getTime() + durationInMillis)
+  getEndDateAsDate(): Date {
+    const endDate = new Date(this.end_date)
+
+    const createdAtTime = this.created_at
+    const hours = createdAtTime.getHours()
+    const minutes = createdAtTime.getMinutes()
+    const seconds = createdAtTime.getSeconds()
+
+    endDate.setHours(hours, minutes, seconds)
+
+    return endDate
   }
 }
