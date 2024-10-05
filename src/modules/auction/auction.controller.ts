@@ -36,8 +36,8 @@ export class AuctionController {
   @Get('me/auctions')
   @HttpCode(HttpStatus.OK)
   async findUserAuctions(@GetCurrentUserById() userId: string): Promise<Auction[]> {
-    const activeAuctionsUser = await this.auctionService.findActiveUserAuctions(userId)
-    return activeAuctionsUser
+    const auctionsUser = await this.auctionService.findUserAuctions(userId)
+    return auctionsUser
   }
 
   @UseGuards(AuthGuard('jwt'))

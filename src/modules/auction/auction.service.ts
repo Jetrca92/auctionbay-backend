@@ -70,7 +70,7 @@ export class AuctionService extends AbstractService {
     return this.remove(auctionId)
   }
 
-  async findActiveAuctions(): Promise<Auction[]> {
+  async checkActiveAuctions(): Promise<void> {
     try {
       const auctions = (await this.auctionRepository.find({
         where: { is_active: true },
@@ -80,26 +80,31 @@ export class AuctionService extends AbstractService {
         auction.checkAndUpdateAuctionStatus()
       })
       await this.auctionRepository.save(auctions)
-      try {
-        const activeAuctions = await this.auctionRepository.find({
-          where: { is_active: true },
-          order: { end_date: 'ASC' },
-          relations: ['owner', 'bids'],
-        })
-        return activeAuctions
-      } catch (error) {
-        throw new InternalServerErrorException(error)
-      }
     } catch (error) {
       throw new InternalServerErrorException(error)
     }
   }
 
-  async findActiveUserAuctions(userId: string): Promise<Auction[]> {
+  async findActiveAuctions(): Promise<Auction[]> {
+    this.checkActiveAuctions()
+    try {
+      const activeAuctions = await this.auctionRepository.find({
+        where: { is_active: true },
+        order: { end_date: 'ASC' },
+        relations: ['owner', 'bids'],
+      })
+      return activeAuctions
+    } catch (error) {
+      throw new InternalServerErrorException(error)
+    }
+  }
+
+  async findUserAuctions(userId: string): Promise<Auction[]> {
     try {
       const activeUserAuctions = (await this.auctionRepository.find({
-        where: { is_active: true, owner: { id: userId } },
+        where: { owner: { id: userId } },
         order: {
+          is_active: 'DESC',
           end_date: 'ASC',
         },
         relations: ['owner', 'bids'],
