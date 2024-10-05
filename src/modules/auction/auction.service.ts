@@ -43,26 +43,68 @@ export class AuctionService extends AbstractService {
 
   async update(auctionId: string, userId: string, updateAuctionDto: UpdateAuctionDto): Promise<Auction> {
     const auction = (await this.findById(auctionId, ['owner'])) as Auction
+    Logger.log('Current auction before update:', JSON.stringify(auction))
     if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
     if (auction && auction.owner) {
       console.log('Owner ID:', auction.owner.id)
     } else {
       console.log('Owner not found')
     }
-    if (auction.owner.id !== userId) throw new ForbiddenException('You are the owner of this auction')
+    if (auction.owner.id !== userId) throw new ForbiddenException('You are not the owner of this auction')
     try {
       Object.assign(auction, updateAuctionDto)
-      return await this.auctionRepository.save(auction)
+      Logger.log('Auction after update:', JSON.stringify(auction))
+      const savedAuction = await this.auctionRepository.save(auction)
+      Logger.log('Auction saved', JSON.stringify(savedAuction))
+      return savedAuction
     } catch (error) {
       Logger.error(error)
       throw new InternalServerErrorException('Something went wrong while updating the auction.')
     }
   }
 
+  async handleDelete(auctionId: string, userId: string): Promise<Auction> {
+    const auction = (await this.findById(auctionId, ['owner'])) as Auction
+    if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
+    if (auction.owner.id !== userId) throw new ForbiddenException('You are notthe owner of this auction')
+    return this.remove(auctionId)
+  }
+
   async findActiveAuctions(): Promise<Auction[]> {
     try {
-      const activeAuctions = (await this.auctionRepository.find({ where: { is_active: true } })) as Auction[]
-      return activeAuctions
+      const auctions = (await this.auctionRepository.find({
+        where: { is_active: true },
+      })) as Auction[]
+
+      auctions.forEach((auction) => {
+        auction.checkAndUpdateAuctionStatus()
+      })
+      await this.auctionRepository.save(auctions)
+      try {
+        const activeAuctions = await this.auctionRepository.find({
+          where: { is_active: true },
+          order: { end_date: 'ASC' },
+          relations: ['owner', 'bids'],
+        })
+        return activeAuctions
+      } catch (error) {
+        throw new InternalServerErrorException(error)
+      }
+    } catch (error) {
+      throw new InternalServerErrorException(error)
+    }
+  }
+
+  async findActiveUserAuctions(userId: string): Promise<Auction[]> {
+    try {
+      const activeUserAuctions = (await this.auctionRepository.find({
+        where: { is_active: true, owner: { id: userId } },
+        order: {
+          end_date: 'ASC',
+        },
+        relations: ['owner', 'bids'],
+      })) as Auction[]
+      return activeUserAuctions
     } catch (error) {
       throw new InternalServerErrorException(error)
     }

@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, UseGuards } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Logger,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common'
 import { AuctionService } from './auction.service'
 import { AuthGuard } from '@nestjs/passport'
 import { GetCurrentUserById } from 'utils/get-user-by-id.decorator'
@@ -11,12 +23,21 @@ import { Bid } from 'entities/bid.entity'
 @Controller()
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
+
   @Get('auctions')
   @HttpCode(HttpStatus.OK)
   async findAuctions(): Promise<Auction[]> {
     const activeAuctions = await this.auctionService.findActiveAuctions()
+    Logger.log('Returned active auctions')
+    return activeAuctions
+  }
 
-    return activeAuctions.sort((a, b) => a.getEndDateAsDate().getTime() - b.getEndDateAsDate().getTime())
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me/auctions')
+  @HttpCode(HttpStatus.OK)
+  async findUserAuctions(@GetCurrentUserById() userId: string): Promise<Auction[]> {
+    const activeAuctionsUser = await this.auctionService.findActiveUserAuctions(userId)
+    return activeAuctionsUser
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -35,6 +56,13 @@ export class AuctionController {
     @Body() updateAuctionDto: UpdateAuctionDto,
   ): Promise<Auction> {
     return this.auctionService.update(auctionId, userId, updateAuctionDto)
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete('me/auction/:id')
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') auctionId: string, @GetCurrentUserById() userId: string): Promise<Auction> {
+    return this.auctionService.handleDelete(auctionId, userId)
   }
 
   @UseGuards(AuthGuard('jwt'))

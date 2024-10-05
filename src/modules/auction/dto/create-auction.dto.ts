@@ -10,7 +10,7 @@ export class CreateAuctionDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsString()
-  image?: string
+  image?: string | null
 
   @ApiProperty({ required: true })
   @IsNotEmpty()

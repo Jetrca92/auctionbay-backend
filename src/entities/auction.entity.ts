@@ -3,6 +3,7 @@ import { Base } from './base.entity'
 import { User } from './user.entity'
 import { Bid } from './bid.entity'
 import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator'
+import { Logger } from '@nestjs/common'
 
 @Entity()
 export class Auction extends Base {
@@ -48,5 +49,18 @@ export class Auction extends Base {
     endDate.setHours(hours, minutes, seconds)
 
     return endDate
+  }
+
+  checkAndUpdateAuctionStatus(): void {
+    const currentDate = new Date()
+    const auctionEndDate = this.getEndDateAsDate()
+    auctionEndDate.setHours(this.created_at.getHours(), this.created_at.getMinutes(), this.created_at.getSeconds())
+
+    // Check if the current date is past the auction's end date
+    if (currentDate > auctionEndDate && this.is_active) {
+      this.is_active = false
+      Logger.log('current', currentDate)
+      Logger.log('end', auctionEndDate)
+    }
   }
 }
