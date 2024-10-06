@@ -91,7 +91,7 @@ export class AuctionService extends AbstractService {
       const activeAuctions = await this.auctionRepository.find({
         where: { is_active: true },
         order: { end_date: 'ASC' },
-        relations: ['owner', 'bids'],
+        relations: ['owner', 'bids', 'bids.owner'],
       })
       return activeAuctions
     } catch (error) {
@@ -108,7 +108,7 @@ export class AuctionService extends AbstractService {
           is_active: 'DESC',
           end_date: 'ASC',
         },
-        relations: ['owner', 'bids'],
+        relations: ['owner', 'bids', 'bids.owner'],
       })) as Auction[]
       return activeUserAuctions
     } catch (error) {
