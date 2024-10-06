@@ -100,6 +100,7 @@ export class AuctionService extends AbstractService {
   }
 
   async findUserAuctions(userId: string): Promise<Auction[]> {
+    this.checkActiveAuctions()
     try {
       const activeUserAuctions = (await this.auctionRepository.find({
         where: { owner: { id: userId } },
@@ -123,7 +124,7 @@ export class AuctionService extends AbstractService {
       if (!auction) throw new NotFoundException('Auction not found')
       if (auction.owner.id === user.id) throw new BadRequestException('You cant bid on your own auction')
       const highest_bid = await this.findHighestBid(auctionId)
-      if (highest_bid && highest_bid.amount <= createBidDto.amount) {
+      if (highest_bid && highest_bid.amount >= createBidDto.amount) {
         throw new BadRequestException('Your bid must be higher than the current bid')
       }
       const newBid = this.bidRepository.create({ ...createBidDto, owner: user, auction: auction })
@@ -131,6 +132,7 @@ export class AuctionService extends AbstractService {
       return this.bidRepository.save(newBid)
     } catch (error) {
       Logger.error(error)
+      Logger.error(`Error while creating bid for auction ${auctionId} by user ${userId}: ${error.message}`)
       throw new InternalServerErrorException('Something went wrong while creating a new bid.')
     }
   }
@@ -138,7 +140,7 @@ export class AuctionService extends AbstractService {
   async findHighestBid(auctionId: string): Promise<Bid> {
     return this.bidRepository
       .createQueryBuilder('bid')
-      .where('bid.auctionId = :auctionId', { auctionId })
+      .where('bid.auction_id = :auctionId', { auctionId })
       .orderBy('bid.amount', 'DESC')
       .getOne()
   }
