@@ -40,6 +40,14 @@ export class AuctionController {
     return auctions
   }
 
+  @Get('auction/:id')
+  @HttpCode(HttpStatus.OK)
+  async findAuction(@Param('id') auctionId: string): Promise<Auction> {
+    const auction = await this.auctionService.findAuction(auctionId)
+    Logger.log('Returned auction')
+    return auction
+  }
+
   @UseGuards(AuthGuard('jwt'))
   @Get('me/auctions')
   @HttpCode(HttpStatus.OK)

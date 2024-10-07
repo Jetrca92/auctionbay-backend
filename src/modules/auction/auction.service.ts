@@ -98,6 +98,18 @@ export class AuctionService extends AbstractService {
     }
   }
 
+  async findAuction(id: string): Promise<Auction> {
+    try {
+      const auction = await this.auctionRepository.findOne({
+        where: { id: id },
+        relations: ['owner', 'bids', 'bids.owner'],
+      })
+      return auction
+    } catch (error) {
+      throw new InternalServerErrorException(error)
+    }
+  }
+
   async findActiveAuctions(): Promise<Auction[]> {
     this.checkActiveAuctions()
     try {
@@ -142,12 +154,7 @@ export class AuctionService extends AbstractService {
       }
       const newBid = this.bidRepository.create({ ...createBidDto, owner: user, auction: auction })
       Logger.log(`Creating new bid by ${userId} user id.`)
-      this.bidRepository.save(newBid)
-      const savedBid = await this.bidRepository.findOne({
-        where: { id: newBid.id },
-        relations: ['owner', 'auction', 'auction.owner', 'auction.bids', 'auction.bids.owner'],
-      })
-      return savedBid
+      return this.bidRepository.save(newBid)
     } catch (error) {
       Logger.error(error)
       Logger.error(`Error while creating bid for auction ${auctionId} by user ${userId}: ${error.message}`)
