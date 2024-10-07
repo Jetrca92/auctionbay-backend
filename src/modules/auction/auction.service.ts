@@ -85,6 +85,19 @@ export class AuctionService extends AbstractService {
     }
   }
 
+  async findAuctions(): Promise<Auction[]> {
+    this.checkActiveAuctions()
+    try {
+      const auctions = await this.auctionRepository.find({
+        order: { end_date: 'ASC' },
+        relations: ['owner', 'bids', 'bids.owner'],
+      })
+      return auctions
+    } catch (error) {
+      throw new InternalServerErrorException(error)
+    }
+  }
+
   async findActiveAuctions(): Promise<Auction[]> {
     this.checkActiveAuctions()
     try {

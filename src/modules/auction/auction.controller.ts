@@ -24,12 +24,20 @@ import { Bid } from 'entities/bid.entity'
 export class AuctionController {
   constructor(private readonly auctionService: AuctionService) {}
 
-  @Get('auctions')
+  @Get('active-auctions')
   @HttpCode(HttpStatus.OK)
-  async findAuctions(): Promise<Auction[]> {
+  async findActiveuctions(): Promise<Auction[]> {
     const activeAuctions = await this.auctionService.findActiveAuctions()
     Logger.log('Returned active auctions')
     return activeAuctions
+  }
+
+  @Get('auctions')
+  @HttpCode(HttpStatus.OK)
+  async findAuctions(): Promise<Auction[]> {
+    const auctions = await this.auctionService.findAuctions()
+    Logger.log('Returned active auctions')
+    return auctions
   }
 
   @UseGuards(AuthGuard('jwt'))
