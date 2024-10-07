@@ -133,7 +133,7 @@ export class AuctionService extends AbstractService {
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } })
       if (!user) throw new NotFoundException('User not found')
-      const auction = await this.auctionRepository.findOne({ where: { id: auctionId }, relations: ['owner'] })
+      const auction = await this.auctionRepository.findOne({ where: { id: auctionId }, relations: ['owner', 'bids'] })
       if (!auction) throw new NotFoundException('Auction not found')
       if (auction.owner.id === user.id) throw new BadRequestException('You cant bid on your own auction')
       const highest_bid = await this.findHighestBid(auctionId)
@@ -142,7 +142,12 @@ export class AuctionService extends AbstractService {
       }
       const newBid = this.bidRepository.create({ ...createBidDto, owner: user, auction: auction })
       Logger.log(`Creating new bid by ${userId} user id.`)
-      return this.bidRepository.save(newBid)
+      this.bidRepository.save(newBid)
+      const savedBid = await this.bidRepository.findOne({
+        where: { id: newBid.id },
+        relations: ['owner', 'auction', 'auction.owner', 'auction.bids', 'auction.bids.owner'],
+      })
+      return savedBid
     } catch (error) {
       Logger.error(error)
       Logger.error(`Error while creating bid for auction ${auctionId} by user ${userId}: ${error.message}`)
