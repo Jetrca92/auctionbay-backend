@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,7 +10,9 @@ import {
   Param,
   Patch,
   Post,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common'
 import { AuctionService } from './auction.service'
 import { AuthGuard } from '@nestjs/passport'
@@ -19,6 +22,9 @@ import { CreateAuctionDto } from './dto/create-auction.dto'
 import { UpdateAuctionDto } from './dto/update-auction.dto'
 import { CreateBidDto } from './dto/create-bid.dto'
 import { Bid } from 'entities/bid.entity'
+import { extname } from 'path'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { diskStorage } from 'multer'
 
 @Controller()
 export class AuctionController {
@@ -61,6 +67,35 @@ export class AuctionController {
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createAuctionDto: CreateAuctionDto, @GetCurrentUserById() userId: string): Promise<Auction> {
     return this.auctionService.create(createAuctionDto, userId)
+  }
+
+  @Post('me/auction/upload/:id')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './files',
+        filename: (req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9)
+          const ext = extname(file.originalname)
+          cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`)
+        },
+      }),
+      fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+          Logger.log('Only image files ae allowed!')
+          return cb(new BadRequestException('Only image files ae allowed!'), false)
+        }
+        cb(null, true)
+      },
+    }),
+  )
+  @HttpCode(HttpStatus.CREATED)
+  async uploadImage(@UploadedFile() file: Express.Multer.File, @Param('id') auctionId: string): Promise<Auction> {
+    Logger.log('Received file:', file)
+    Logger.log('Auction ID:', auctionId)
+    if (!file) throw new BadRequestException('File must be uploaded')
+    const imageUrl = `/files/${file.filename}`
+    return this.auctionService.updateAuctionImageUrl(auctionId, imageUrl)
   }
 
   @UseGuards(AuthGuard('jwt'))

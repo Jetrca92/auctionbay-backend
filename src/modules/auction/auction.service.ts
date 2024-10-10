@@ -169,4 +169,11 @@ export class AuctionService extends AbstractService {
       .orderBy('bid.amount', 'DESC')
       .getOne()
   }
+
+  async updateAuctionImageUrl(auctionId: string, image: string): Promise<Auction> {
+    const auction = await this.findById(auctionId)
+    if (!auction) throw new NotFoundException('Auction not found')
+    auction.image = image
+    return this.auctionRepository.save(auction)
+  }
 }
