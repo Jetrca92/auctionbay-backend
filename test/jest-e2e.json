@@ -4,7 +4,7 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
+    "^.+\\.(ts)$": "ts-jest"
   },
   "moduleDirectories": ["node_modules", "src"],
   "moduleNameMapper": {
@@ -14,5 +14,6 @@
     "^helpers/(.*)$": "<rootDir>../src/helpers/$1",
     "^interfaces/(.*)$": "<rootDir>../src/interfaces/$1",
     "^utils/(.*)$": "<rootDir>../src/utils/$1"
-  }
+  },
+  "testPathIgnorePatterns": ["/node_modules/", "/dist/"]
 }

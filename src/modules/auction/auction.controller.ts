@@ -42,7 +42,7 @@ export class AuctionController {
   @HttpCode(HttpStatus.OK)
   async findAuctions(): Promise<Auction[]> {
     const auctions = await this.auctionService.findAuctions()
-    Logger.log('Returned active auctions')
+    Logger.log('Returned all auctions')
     return auctions
   }
 
