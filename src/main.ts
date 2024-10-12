@@ -11,9 +11,9 @@ async function bootstrap() {
   })
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // Strips properties that don't have decorators in the DTO
-      forbidNonWhitelisted: true, // Throws an error if a non-whitelisted property is present
-      transform: true, // Automatically transforms payloads to be objects typed according to DTOs
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
     }),
   )
   const PORT = process.env.PORT || 8080

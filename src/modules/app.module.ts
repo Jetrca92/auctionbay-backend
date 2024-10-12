@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ServeStaticModule } from '@nestjs/serve-static'
 import { ConfigModule } from '@nestjs/config'
-import { configValidationSchema } from '../config/schema.config'
+import { configValidationSchema } from 'config/schema.config'
 
 import { DatabaseModule } from './database/database.module'
 import { UserModule } from './user/user.module'
