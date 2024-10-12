@@ -1,4 +1,10 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common'
 import { Repository } from 'typeorm'
 
 @Injectable()
@@ -15,6 +21,7 @@ export abstract class AbstractService {
   }
 
   async findBy(condition, relations = []): Promise<any> {
+    if (!condition || typeof condition !== 'object') throw new BadRequestException('Invalid condition provided')
     try {
       return await this.repository.findOne({
         where: condition,
@@ -29,22 +36,24 @@ export abstract class AbstractService {
   }
 
   async findById(id: string, relations = []): Promise<any> {
+    if (!id || typeof id !== 'string') throw new BadRequestException('Invalid ID format provided')
     try {
       const element = await this.repository.findOne({
         where: { id },
         relations,
       })
       if (!element) {
-        throw new BadRequestException(`Cannot find elemnt with id: ${id}`)
+        throw new NotFoundException(`Cannot find elemnt with id: ${id}`)
       }
       return element
     } catch (error) {
       Logger.log(error)
-      throw new InternalServerErrorException(`Something went wrong while searchig for an element with an id: ${id}`)
+      throw new InternalServerErrorException(`Something went wrong while searching for an element with an id: ${id}`)
     }
   }
 
   async remove(id: string): Promise<any> {
+    if (!id || typeof id !== 'string') throw new BadRequestException('Invalid ID format provided')
     const element = await this.findById(id)
     try {
       return this.repository.remove(element)

@@ -16,13 +16,13 @@ POST http://localhost:8080/auth/login HTTP/1.1
 Content-Type: application/json
 
 {
-  	"email": "cvikl.jasna@gmail.com",
-  	"password": "Jasna123"
+  	"email": "jasnacvikl@gmail.com",
+  	"password": "Jasna123!"
 }
 
 ### GET /me
 GET http://localhost:8080/me HTTP/1.1
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNjQ0NmQ2Yi1hZGZkLTQ5ZDctYTQ5NC1jMWU1NjE3NjJmNzQiLCJ1c2VybmFtZSI6ImN2aWtsLmphc25hQGdtYWlsLmNvbSIsImlhdCI6MTcyNzk3Njc3OSwiZXhwIjoxNzI3OTc3Njc5fQ.hVeAEuwqm_rt86cREVowU9cgUy8tiLA2HZwXjsqq8QE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxOTgyNjk2My0xZjZiLTQxZjYtODViNS1kY2ZjMzMzMzc4NjYiLCJ1c2VybmFtZSI6Imphc25hY3Zpa2xAZ21haWwuY29tIiwiaWF0IjoxNzI4NzU4MDQwLCJleHAiOjE3Mjk2NTgwNDB9.xouXY0MnN0AC1pUn2k1ucpYRsOUdxbyIa1Oi6r90IrE
 
 ### PATCH /me/update-password
 PATCH  http://localhost:8080/me/update-password HTTP/1.1
