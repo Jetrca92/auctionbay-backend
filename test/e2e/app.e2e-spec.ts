@@ -36,6 +36,11 @@ describe('App E2E', () => {
         AuctionModule,
       ],
     }).compile()
+
+    // Initialize the app
+    app = moduleFixture.createNestApplication()
+
+    // Use global pipes
     app.useGlobalPipes(
       new ValidationPipe({
         whitelist: true,
@@ -44,13 +49,18 @@ describe('App E2E', () => {
       }),
     )
 
-    app = moduleFixture.createNestApplication()
     await app.init()
+    await app.listen(3333)
+    // Assign the dataSource after initializing the app
     dataSource = app.get<DataSource>(DataSource)
+    pactum.request.setBaseUrl('http://localhost:3333')
+    console.log(dataSource)
   })
 
   afterAll(async () => {
-    await dataSource.destroy()
+    if (dataSource) {
+      await dataSource.destroy()
+    }
     await app.close()
   })
 
@@ -66,7 +76,7 @@ describe('App E2E', () => {
           password: 'Podzemlje42',
           confirm_password: 'Podzemlje42',
         }
-        return pactum.spec().post('http://localhost:3333/auth/signup').withBody(dto).expectStatus(201)
+        return pactum.spec().post('/auth/signup').withBody(dto).expectStatus(201)
       })
     })
   })
