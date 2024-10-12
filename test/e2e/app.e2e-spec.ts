@@ -54,7 +54,6 @@ describe('App E2E', () => {
     // Assign the dataSource after initializing the app
     dataSource = app.get<DataSource>(DataSource)
     pactum.request.setBaseUrl('http://localhost:3333')
-    console.log(dataSource)
   })
 
   afterAll(async () => {
