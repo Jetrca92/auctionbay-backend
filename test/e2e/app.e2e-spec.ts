@@ -14,6 +14,7 @@ import { AuthModule } from 'modules/auth/auth.module'
 import { AuctionModule } from 'modules/auction/auction.module'
 import { CreateAuctionDto } from 'modules/auction/dto/create-auction.dto'
 import { UpdateUserDto } from 'modules/user/dto/update-user.dto'
+import { v4 as uuidv4 } from 'uuid'
 
 describe('App E2E', () => {
   let app: INestApplication
@@ -329,14 +330,6 @@ describe('App E2E', () => {
         is_active: true,
       }
       it('should create a new auction', async () => {
-        const userResponse = await pactum
-          .spec()
-          .get('/me')
-          .withHeaders({
-            Authorization: `Bearer ${token}`,
-          })
-          .expectStatus(200)
-
         await pactum
           .spec()
           .post('/me/auction/')
@@ -345,6 +338,371 @@ describe('App E2E', () => {
           })
           .withBody(createAuctionDto)
           .expectStatus(201)
+      })
+
+      it('should throw an error when user ID is missing', async () => {
+        await pactum.spec().post('/me/auction').withBody(createAuctionDto).expectStatus(401)
+      })
+
+      it('should throw an error when auction details are missing', async () => {
+        await pactum
+          .spec()
+          .post('/me/auction')
+          .withHeaders({ Authorization: `Bearer ${token}` })
+          .withBody({})
+          .expectStatus(400)
+      })
+    })
+
+    describe('Update auction', () => {
+      const updateAuctionDto = {
+        title: 'Updated title',
+      }
+      const createAuctionDto: CreateAuctionDto = {
+        title: 'test auction',
+        description: 'This is a test auction',
+        starting_price: 1,
+        end_date: '2025-12-17T03:24:00',
+        is_active: true,
+      }
+      let auctionId: string
+      beforeEach(async () => {
+        const auction = await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        auctionId = auction.body.id
+      })
+
+      it('should update an auction', async () => {
+        await pactum
+          .spec()
+          .patch(`/me/auction/${auctionId}`)
+          .withHeaders({ Authorization: `Bearer ${token}` }) // Assuming token is valid
+          .withBody(updateAuctionDto)
+          .expectStatus(200)
+      })
+
+      it('should throw a BadRequestException when auction ID is missing', async () => {
+        await pactum
+          .spec()
+          .patch('/me/auction/')
+          .withHeaders({ Authorization: `Bearer ${token}` })
+          .withBody(updateAuctionDto)
+          .expectStatus(404)
+      })
+
+      it('should throw an UnauthorizedException when user ID is missing', async () => {
+        await pactum.spec().patch(`/me/auction/${auctionId}`).withBody(updateAuctionDto).expectStatus(401)
+      })
+
+      it('should throw a NotFoundException if auction does not exist', async () => {
+        const nonExistingId = uuidv4()
+        await pactum
+          .spec()
+          .patch(`/me/auction/${nonExistingId}`)
+          .withHeaders({ Authorization: `Bearer ${token}` })
+          .withBody(updateAuctionDto)
+          .expectStatus(404)
+      })
+
+      it('should throw a ForbiddenException if user is not the auction owner', async () => {
+        const mockOwner2 = {
+          email: 'owner2@example.com',
+          password: 'Owner2Pass123',
+          confirm_password: 'Owner2Pass123',
+          first_name: 'Harry',
+          last_name: 'Potter',
+        }
+        await pactum.spec().post('/auth/signup').withBody(mockOwner2).expectStatus(201)
+        const loginResponse = await pactum
+          .spec()
+          .post('/auth/login')
+          .withBody({ email: mockOwner2.email, password: mockOwner2.password })
+          .expectStatus(200)
+        const token2 = loginResponse.body
+        const auction2 = await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token2}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        const auction2Id = auction2.body.id
+        await pactum
+          .spec()
+          .patch(`/me/auction/${auction2Id}`)
+          .withHeaders({ Authorization: `Bearer ${token}` })
+          .withBody(updateAuctionDto)
+          .expectStatus(403)
+      })
+    })
+
+    describe('Get active auctions', () => {
+      it('should return active auctions', async () => {
+        const createAuctionDto: CreateAuctionDto = {
+          title: 'test auction',
+          description: 'This is a test auction',
+          starting_price: 1,
+          end_date: '2025-12-17T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto2: CreateAuctionDto = {
+          title: 'test auction2',
+          description: 'This is a test auction2',
+          starting_price: 2,
+          end_date: '2025-12-19T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto3: CreateAuctionDto = {
+          title: 'test auction3',
+          description: 'This is a test auction3',
+          starting_price: 3,
+          end_date: '2025-12-19T03:24:00',
+          is_active: false,
+        }
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto2)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto3)
+          .expectStatus(201)
+        const response = await pactum.spec().get('/active-auctions').expectStatus(200)
+        expect(response.body).toHaveLength(2)
+      })
+
+      it('should return an empty array when no active auctions are found', async () => {
+        const response = await pactum.spec().get('/active-auctions').expectStatus(200)
+        expect(response.body).toHaveLength(0)
+      })
+    })
+
+    describe('Get auctions', () => {
+      it('should return all auctions', async () => {
+        const createAuctionDto: CreateAuctionDto = {
+          title: 'test auction',
+          description: 'This is a test auction',
+          starting_price: 1,
+          end_date: '2025-12-17T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto2: CreateAuctionDto = {
+          title: 'test auction2',
+          description: 'This is a test auction2',
+          starting_price: 2,
+          end_date: '2025-12-19T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto3: CreateAuctionDto = {
+          title: 'test auction3',
+          description: 'This is a test auction3',
+          starting_price: 3,
+          end_date: '2025-12-19T03:24:00',
+          is_active: false,
+        }
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto2)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto3)
+          .expectStatus(201)
+        const response = await pactum.spec().get('/auctions').expectStatus(200)
+        expect(response.body).toHaveLength(3)
+      })
+
+      it('should return an empty array when no auctions are found', async () => {
+        const response = await pactum.spec().get('/auctions').expectStatus(200)
+        expect(response.body).toHaveLength(0)
+      })
+    })
+
+    describe('Get user auctions', () => {
+      it('should return user auctions', async () => {
+        const createAuctionDto: CreateAuctionDto = {
+          title: 'test auction',
+          description: 'This is a test auction',
+          starting_price: 1,
+          end_date: '2025-12-17T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto2: CreateAuctionDto = {
+          title: 'test auction2',
+          description: 'This is a test auction2',
+          starting_price: 2,
+          end_date: '2025-12-19T03:24:00',
+          is_active: true,
+        }
+        const createAuctionDto3: CreateAuctionDto = {
+          title: 'test auction3',
+          description: 'This is a test auction3',
+          starting_price: 3,
+          end_date: '2025-12-19T03:24:00',
+          is_active: false,
+        }
+        const mockOwner2 = {
+          email: 'owner2@example.com',
+          password: 'Owner2Pass123',
+          confirm_password: 'Owner2Pass123',
+          first_name: 'Harry',
+          last_name: 'Potter',
+        }
+        await pactum.spec().post('/auth/signup').withBody(mockOwner2).expectStatus(201)
+        const loginResponse = await pactum
+          .spec()
+          .post('/auth/login')
+          .withBody({ email: mockOwner2.email, password: mockOwner2.password })
+          .expectStatus(200)
+        const token2 = loginResponse.body
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto2)
+          .expectStatus(201)
+        await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token2}`,
+          })
+          .withBody(createAuctionDto3)
+          .expectStatus(201)
+        const response = await pactum
+          .spec()
+          .get('/me/auctions')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .expectStatus(200)
+        expect(response.body).toHaveLength(2)
+      })
+
+      it('should return empty if no user auctions', async () => {
+        const response = await pactum
+          .spec()
+          .get('/me/auctions')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .expectStatus(200)
+        expect(response.body).toHaveLength(0)
+      })
+    })
+
+    describe('Get auction by ID', () => {
+      let auctionId: string
+      beforeEach(async () => {
+        const createAuctionDto: CreateAuctionDto = {
+          title: 'test auction',
+          description: 'This is a test auction',
+          starting_price: 1,
+          end_date: '2025-12-17T03:24:00',
+          is_active: true,
+        }
+        const response = await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        auctionId = response.body.id
+      })
+      it('should return an auction by ID', async () => {
+        const response = await pactum.spec().get(`/auction/${auctionId}`).expectStatus(200)
+        expect(response.body).toHaveProperty('id', auctionId)
+      })
+
+      it('should return not found for non existent ID', async () => {
+        const nonExistentId = uuidv4()
+        await pactum.spec().get(`/auction/${nonExistentId}`).expectStatus(404)
+      })
+    })
+
+    describe('Upload image to auction', () => {
+      let auctionId: string
+      beforeEach(async () => {
+        const createAuctionDto: CreateAuctionDto = {
+          title: 'test auction',
+          description: 'This is a test auction',
+          starting_price: 1,
+          end_date: '2025-12-17T03:24:00',
+          is_active: true,
+        }
+        const response = await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        auctionId = response.body.id
+      })
+
+      it('should upload an image and return the updated auction', async () => {
+        const response = await pactum
+          .spec()
+          .post(`/me/auction/upload/${auctionId}`)
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withFile('image', 'tsconfig.png')
+          .expectStatus(201)
+        expect(response.body).toHaveProperty('image')
+        console.log(response.body)
       })
     })
   })

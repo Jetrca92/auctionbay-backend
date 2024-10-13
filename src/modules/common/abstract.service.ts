@@ -43,10 +43,11 @@ export abstract class AbstractService {
         relations,
       })
       if (!element) {
-        throw new NotFoundException(`Cannot find elemnt with id: ${id}`)
+        throw new NotFoundException(`Cannot find element with id: ${id}`)
       }
       return element
     } catch (error) {
+      if (error instanceof NotFoundException) throw error
       Logger.log(error)
       throw new InternalServerErrorException(`Something went wrong while searching for an element with an id: ${id}`)
     }

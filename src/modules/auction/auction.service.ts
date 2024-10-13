@@ -27,6 +27,8 @@ export class AuctionService extends AbstractService {
   }
 
   async create(createAuctionDto: CreateAuctionDto, userId: string): Promise<Auction> {
+    if (!userId) throw new BadRequestException('User ID must be provided')
+    if (!createAuctionDto) throw new BadRequestException('Auction details must be provided')
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } })
       if (!user) {
@@ -42,28 +44,23 @@ export class AuctionService extends AbstractService {
   }
 
   async update(auctionId: string, userId: string, updateAuctionDto: UpdateAuctionDto): Promise<Auction> {
-    const auction = (await this.findById(auctionId, ['owner'])) as Auction
-    Logger.log('Current auction before update:', JSON.stringify(auction))
-    if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
-    if (auction && auction.owner) {
-      console.log('Owner ID:', auction.owner.id)
-    } else {
-      console.log('Owner not found')
-    }
-    if (auction.owner.id !== userId) throw new ForbiddenException('You are not the owner of this auction')
+    if (!auctionId || !userId) throw new BadRequestException('Auction and User ID must be provided')
     try {
+      const auction = (await this.findById(auctionId, ['owner'])) as Auction
+      if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
+      if (auction.owner.id !== userId) throw new ForbiddenException('You are not the owner of this auction')
       Object.assign(auction, updateAuctionDto)
-      Logger.log('Auction after update:', JSON.stringify(auction))
-      const savedAuction = await this.auctionRepository.save(auction)
-      Logger.log('Auction saved', JSON.stringify(savedAuction))
-      return savedAuction
+      Logger.log(`Updating auction ID: ${auctionId} by user ID: ${userId}.`)
+      return await this.auctionRepository.save(auction)
     } catch (error) {
+      if (error instanceof NotFoundException || ForbiddenException) throw error
       Logger.error(error)
       throw new InternalServerErrorException('Something went wrong while updating the auction.')
     }
   }
 
   async handleDelete(auctionId: string, userId: string): Promise<Auction> {
+    if (!auctionId || !userId) throw new BadRequestException('Auction and User ID must be provided')
     const auction = (await this.findById(auctionId, ['owner'])) as Auction
     if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
     if (auction.owner.id !== userId) throw new ForbiddenException('You are notthe owner of this auction')
@@ -99,13 +96,16 @@ export class AuctionService extends AbstractService {
   }
 
   async findAuction(id: string): Promise<Auction> {
+    if (!id) throw new BadRequestException('Auction ID must be provided.')
     try {
       const auction = await this.auctionRepository.findOne({
         where: { id: id },
         relations: ['owner', 'bids', 'bids.owner'],
       })
+      if (!auction) throw new NotFoundException()
       return auction
     } catch (error) {
+      if (error instanceof NotFoundException) throw error
       throw new InternalServerErrorException(error)
     }
   }
@@ -125,6 +125,7 @@ export class AuctionService extends AbstractService {
   }
 
   async findUserAuctions(userId: string): Promise<Auction[]> {
+    if (!userId) throw new BadRequestException('User ID must be provided.')
     this.checkActiveAuctions()
     try {
       const activeUserAuctions = (await this.auctionRepository.find({
@@ -142,6 +143,8 @@ export class AuctionService extends AbstractService {
   }
 
   async createBid(auctionId: string, userId: string, createBidDto: CreateBidDto): Promise<Bid> {
+    if (!auctionId || !userId) throw new BadRequestException('Auction and User ID must be provided')
+    if (!createBidDto) throw new BadRequestException('Bid details must be provided')
     try {
       const user = await this.userRepository.findOne({ where: { id: userId } })
       if (!user) throw new NotFoundException('User not found')
@@ -163,6 +166,7 @@ export class AuctionService extends AbstractService {
   }
 
   async findHighestBid(auctionId: string): Promise<Bid> {
+    if (!auctionId) throw new BadRequestException('Auction ID must be provided.')
     return this.bidRepository
       .createQueryBuilder('bid')
       .where('bid.auction_id = :auctionId', { auctionId })
@@ -171,6 +175,8 @@ export class AuctionService extends AbstractService {
   }
 
   async updateAuctionImageUrl(auctionId: string, image: string): Promise<Auction> {
+    if (!auctionId) throw new BadRequestException('Auction ID must be provided')
+    if (!image) throw new BadRequestException('Image must be provided')
     const auction = await this.findById(auctionId)
     if (!auction) throw new NotFoundException('Auction not found')
     auction.image = image
