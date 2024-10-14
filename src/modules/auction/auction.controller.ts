@@ -126,4 +126,11 @@ export class AuctionController {
   ): Promise<Bid> {
     return this.auctionService.createBid(auctionId, userId, createBidDto)
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('auctions/:id/create-notification')
+  @HttpCode(HttpStatus.OK)
+  async notification(@Param('id') auctionId: string): Promise<void> {
+    return this.auctionService.createNotifications(auctionId)
+  }
 }

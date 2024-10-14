@@ -15,6 +15,7 @@ import { User } from 'entities/user.entity'
 import { UpdateAuctionDto } from './dto/update-auction.dto'
 import { CreateBidDto } from './dto/create-bid.dto'
 import { Bid } from 'entities/bid.entity'
+import { Notification } from 'entities/notification.entity'
 
 @Injectable()
 export class AuctionService extends AbstractService {
@@ -22,6 +23,7 @@ export class AuctionService extends AbstractService {
     @InjectRepository(Auction) private readonly auctionRepository: Repository<Auction>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Bid) private readonly bidRepository: Repository<Bid>,
+    @InjectRepository(Notification) private readonly notificationRepository: Repository<Notification>,
   ) {
     super(auctionRepository)
   }
@@ -185,5 +187,34 @@ export class AuctionService extends AbstractService {
     if (!auction) throw new NotFoundException('Auction not found')
     auction.image = image
     return this.auctionRepository.save(auction)
+  }
+
+  async createNotifications(auctionId: string): Promise<void> {
+    if (!auctionId) throw new BadRequestException('Auction ID must be provided')
+    const auction = await this.findById(auctionId, ['bids', 'bids.owner'])
+    if (!auction) throw new NotFoundException('Auction not found')
+    if (auction.is_active) throw new BadRequestException('Auction is still active')
+    if (auction.bids.length === 0) throw new BadRequestException('Auction had no bids')
+    const highestBid = await this.findHighestBid(auctionId)
+    await this.sendNotification(highestBid.owner, auction, true)
+    const notificationPromises = auction.bids
+      .filter((bid: Bid) => bid.id !== highestBid.id)
+      .map((bid: Bid) => this.sendNotification(bid.owner, auction, false))
+
+    await Promise.all(notificationPromises)
+    Logger.log(`Notiications sent for auction ${auctionId}`)
+  }
+
+  private async sendNotification(recipient: User, auction: Auction, isWon: boolean) {
+    try {
+      const message = isWon ? 'Won' : 'Outbid'
+      const notification = new Notification()
+      notification.recipient = recipient
+      notification.auction = auction
+      notification.message = message
+      await this.notificationRepository.save(notification)
+    } catch (error) {
+      Logger.error(`Failed to send notification to user ${recipient.id}: ${error.message}`)
+    }
   }
 }
