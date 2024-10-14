@@ -6,7 +6,7 @@ import { IsNumber } from 'class-validator'
 
 @Entity()
 export class Bid extends Base {
-  @ManyToOne(() => User, (user) => user.bids)
+  @ManyToOne(() => User, (user) => user.bids, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   owner: User
 

@@ -155,10 +155,14 @@ export class AuctionService extends AbstractService {
       if (highest_bid && highest_bid.amount >= createBidDto.amount) {
         throw new BadRequestException('Your bid must be higher than the current bid')
       }
+      if (!highest_bid && auction.starting_price >= createBidDto.amount) {
+        throw new BadRequestException('Your bid must be higher than the starting price')
+      }
       const newBid = this.bidRepository.create({ ...createBidDto, owner: user, auction: auction })
       Logger.log(`Creating new bid by ${userId} user id.`)
       return this.bidRepository.save(newBid)
     } catch (error) {
+      if (error instanceof NotFoundException || BadRequestException) throw error
       Logger.error(error)
       Logger.error(`Error while creating bid for auction ${auctionId} by user ${userId}: ${error.message}`)
       throw new InternalServerErrorException('Something went wrong while creating a new bid.')

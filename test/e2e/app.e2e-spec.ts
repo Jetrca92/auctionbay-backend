@@ -15,6 +15,7 @@ import { AuctionModule } from 'modules/auction/auction.module'
 import { CreateAuctionDto } from 'modules/auction/dto/create-auction.dto'
 import { UpdateUserDto } from 'modules/user/dto/update-user.dto'
 import { v4 as uuidv4 } from 'uuid'
+import { CreateBidDto } from 'modules/auction/dto/create-bid.dto'
 
 describe('App E2E', () => {
   let app: INestApplication
@@ -703,6 +704,78 @@ describe('App E2E', () => {
           .expectStatus(201)
         expect(response.body).toHaveProperty('image')
         console.log(response.body)
+      })
+    })
+
+    describe('Bid an auction', () => {
+      let auctionId: string
+      let token2: string
+      const bidAmount: CreateBidDto = { amount: 150 }
+      const createAuctionDto: CreateAuctionDto = {
+        title: 'test auction',
+        description: 'This is a test auction',
+        starting_price: 10,
+        end_date: '2025-12-17T03:24:00',
+        is_active: true,
+      }
+
+      beforeEach(async () => {
+        const mockOwner2 = {
+          email: 'owner2@example.com',
+          password: 'Owner2Pass123',
+          confirm_password: 'Owner2Pass123',
+          first_name: 'Harry',
+          last_name: 'Potter',
+        }
+        await pactum.spec().post('/auth/signup').withBody(mockOwner2).expectStatus(201)
+        const loginResponse = await pactum
+          .spec()
+          .post('/auth/login')
+          .withBody({ email: mockOwner2.email, password: mockOwner2.password })
+          .expectStatus(200)
+        token2 = loginResponse.body
+        const response = await pactum
+          .spec()
+          .post('/me/auction/')
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(createAuctionDto)
+          .expectStatus(201)
+        auctionId = response.body.id
+      })
+      it('should return 400, not possible to bid your auction', async () => {
+        await pactum
+          .spec()
+          .post(`/auctions/${auctionId}/bid`)
+          .withHeaders({
+            Authorization: `Bearer ${token}`,
+          })
+          .withBody(bidAmount)
+          .expectStatus(400)
+      })
+
+      it('should create bid', async () => {
+        await pactum
+          .spec()
+          .post(`/auctions/${auctionId}/bid`)
+          .withHeaders({
+            Authorization: `Bearer ${token2}`,
+          })
+          .withBody(bidAmount)
+          .expectStatus(200)
+      })
+
+      it('should return 400 if the bid is lower than the auction price', async () => {
+        const lowerBidAmount: CreateBidDto = { amount: 9 } // Lower than the auction price
+        await pactum
+          .spec()
+          .post(`/auctions/${auctionId}/bid`)
+          .withHeaders({
+            Authorization: `Bearer ${token2}`,
+          })
+          .withBody(lowerBidAmount)
+          .expectStatus(400)
       })
     })
   })
