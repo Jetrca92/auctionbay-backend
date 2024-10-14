@@ -703,7 +703,6 @@ describe('App E2E', () => {
           .withFile('image', 'tsconfig.png')
           .expectStatus(201)
         expect(response.body).toHaveProperty('image')
-        console.log(response.body)
       })
     })
 
@@ -777,6 +776,115 @@ describe('App E2E', () => {
           .withBody(lowerBidAmount)
           .expectStatus(400)
       })
+    })
+  })
+
+  describe('Notification', () => {
+    let auctionOwnerToken: string
+    let bidder1Token: string
+    let bidder2Token: string
+    let auctionId: string
+    const bidAmount1: CreateBidDto = { amount: 150 }
+    const bidAmount2: CreateBidDto = { amount: 200 }
+
+    beforeEach(async () => {
+      const owner = {
+        email: 'owner123@example.com',
+        password: 'OwnerPass123',
+        confirm_password: 'OwnerPass123',
+        first_name: 'John',
+        last_name: 'Doe',
+      }
+      const bidder1 = {
+        email: 'bidder1234@example.com',
+        password: 'Bidder1Pass123',
+        confirm_password: 'Bidder1Pass123',
+        first_name: 'Harry',
+        last_name: 'Potter',
+      }
+      const bidder2 = {
+        email: 'bidder215@example.com',
+        password: 'Bidder2Pass123',
+        confirm_password: 'Bidder2Pass123',
+        first_name: 'Ron',
+        last_name: 'Weasley',
+      }
+      const auction: CreateAuctionDto = {
+        title: 'Test Auction',
+        description: 'This is a test auction',
+        starting_price: 10,
+        end_date: '2025-12-17T03:24:00',
+        is_active: true,
+      }
+
+      await pactum.spec().post('/auth/signup').withBody(owner).expectStatus(201)
+      await pactum.spec().post('/auth/signup').withBody(bidder1).expectStatus(201)
+      await pactum.spec().post('/auth/signup').withBody(bidder2).expectStatus(201)
+
+      const ownerResponse = await pactum
+        .spec()
+        .post('/auth/login')
+        .withBody({ email: owner.email, password: owner.password })
+        .expectStatus(200)
+      auctionOwnerToken = ownerResponse.body
+
+      const bidder1Response = await pactum
+        .spec()
+        .post('/auth/login')
+        .withBody({ email: bidder1.email, password: bidder1.password })
+        .expectStatus(200)
+      bidder1Token = bidder1Response.body
+
+      const bidder2Response = await pactum
+        .spec()
+        .post('/auth/login')
+        .withBody({ email: bidder2.email, password: bidder2.password })
+        .expectStatus(200)
+      bidder2Token = bidder2Response.body
+
+      const auctionResponse = await pactum
+        .spec()
+        .post('/me/auction/')
+        .withHeaders({
+          Authorization: `Bearer ${auctionOwnerToken}`,
+        })
+        .withBody(auction)
+        .expectStatus(201)
+      auctionId = auctionResponse.body.id
+
+      await pactum
+        .spec()
+        .post(`/auctions/${auctionId}/bid`)
+        .withHeaders({
+          Authorization: `Bearer ${bidder1Token}`,
+        })
+        .withBody(bidAmount1)
+        .expectStatus(200)
+
+      await pactum
+        .spec()
+        .post(`/auctions/${auctionId}/bid`)
+        .withHeaders({
+          Authorization: `Bearer ${bidder2Token}`,
+        })
+        .withBody(bidAmount2)
+        .expectStatus(200)
+    })
+
+    it('should create notifications for the winner and other bidders', async () => {
+      await pactum.spec().post(`/${auctionId}/deactivate-test`)
+
+      // Fetch notifications and verify
+      const notificationsResponse = await pactum
+        .spec()
+        .get(`/me/notifications`)
+        .withHeaders({
+          Authorization: `Bearer ${bidder1Token}`,
+        })
+        .expectStatus(200)
+        .returns('body')
+
+      console.log(notificationsResponse.body)
     })
   })
 })

@@ -25,6 +25,7 @@ import { Bid } from 'entities/bid.entity'
 import { extname } from 'path'
 import { FileInterceptor } from '@nestjs/platform-express'
 import { diskStorage } from 'multer'
+import { Notification } from 'entities/notification.entity'
 
 @Controller()
 export class AuctionController {
@@ -60,6 +61,14 @@ export class AuctionController {
   async findUserAuctions(@GetCurrentUserById() userId: string): Promise<Auction[]> {
     const auctionsUser = await this.auctionService.findUserAuctions(userId)
     return auctionsUser
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me/notifications')
+  @HttpCode(HttpStatus.OK)
+  async findUserNotifications(@GetCurrentUserById() userId: string): Promise<Notification[]> {
+    const notificationsUser = await this.auctionService.findUserNotifications(userId)
+    return notificationsUser
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -127,10 +136,10 @@ export class AuctionController {
     return this.auctionService.createBid(auctionId, userId, createBidDto)
   }
 
-  @UseGuards(AuthGuard('jwt'))
-  @Post('auctions/:id/create-notification')
+  // This endpoint is only for testing
+  @Post(':id/deactivate-test')
   @HttpCode(HttpStatus.OK)
-  async notification(@Param('id') auctionId: string): Promise<void> {
-    return this.auctionService.createNotifications(auctionId)
+  async deactivateTest(@Param('id') auctionId: string) {
+    return await this.auctionService.deactivateAuction(auctionId)
   }
 }

@@ -6,7 +6,7 @@ POST http://localhost:8080/auth/signup HTTP/1.1
 Content-Type: application/json
 
 {
-  	"email": "jasnacvikl@gmail.com",
+  	"email": "jasnacvikl1@gmail.com",
   	"password": "Jasna123!",
   	"confirm_password": "Jasna123!"
 }
@@ -40,13 +40,13 @@ GET http://localhost:8080/auctions HTTP/1.1
 ### POST /me/auction
 POST http://localhost:8080/me/auction HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiZDNkOWI4Yy1mOWU1LTRkZTAtYWI5NC1iMjNiZWY3NGZkYjAiLCJ1c2VybmFtZSI6Imphc25hY3Zpa2xAZ21haWwuY29tIiwiaWF0IjoxNzI3MzM4MDg2LCJleHAiOjE3MjczMzg5ODZ9.98L7GaY4GvAKyd3lEOrsIUF2ICqpK4xu1GYrul34fvo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyNWQwZjAyYy1lNzM0LTRhMWItOWU0NS0zNDcyNzBkODg3MzciLCJ1c2VybmFtZSI6Imphc25hY3Zpa2wxQGdtYWlsLmNvbSIsImlhdCI6MTcyODkzNTMwMSwiZXhwIjoxNzI5ODM1MzAxfQ.kudv8BZKjBUM3hwdH_eeNy0HL-uMBnG05n_StCKRHv4
 
 {
 	"title": "Test auction 12341",
 	"description": "This is a posting of a test auction",
 	"starting_price": 100,
-	"auction_duration_hrs": 20
+	"end_date": "2026-12-17T03:24:00"
 }
 
 ### PATCH /me/auction/:id
@@ -59,10 +59,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2M1YjZlM
 }
 
 ### POST /auctions/:id/bid
-POST http://localhost:8080/auctions/52a28131-09ed-4929-934a-2b91c4fc284f/bid HTTP/1.1
+POST http://localhost:8080/auctions/359d8808-71e1-4c21-9d18-6674a40880c4/bid HTTP/1.1
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhNjQ0NmQ2Yi1hZGZkLTQ5ZDctYTQ5NC1jMWU1NjE3NjJmNzQiLCJ1c2VybmFtZSI6ImN2aWtsLmphc25hQGdtYWlsLmNvbSIsImlhdCI6MTcyODIzNDM3NCwiZXhwIjoxNzI4MjM1Mjc0fQ.ATFCzgHt68_msnGB7Yxo1kH8QcyyQgLkTLuZk0HP09Y
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Y2FmYjkwZS1hNmVjLTQzYzgtYmM1NS1mNDhiZGIyMDM2MmUiLCJ1c2VybmFtZSI6Imphc25hY3Zpa2xAZ21haWwuY29tIiwiaWF0IjoxNzI4OTM2NDgzLCJleHAiOjE3Mjk4MzY0ODN9.91iANJyVmZiV9_rw7Klr1KnxaB46OotisqMACXnOPmg
 
 {
-	"amount": 11
+	"amount": 110
 }
+
+### GET /notifications
+GET http://localhost:8080/me/notifications
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4Y2FmYjkwZS1hNmVjLTQzYzgtYmM1NS1mNDhiZGIyMDM2MmUiLCJ1c2VybmFtZSI6Imphc25hY3Zpa2xAZ21haWwuY29tIiwiaWF0IjoxNzI4OTM2NDgzLCJleHAiOjE3Mjk4MzY0ODN9.91iANJyVmZiV9_rw7Klr1KnxaB46OotisqMACXnOPmg
+
+### POST /deactivate-test
+POST http://localhost:8080/b2b53a97-9dbc-4fb6-90f0-1f897ee68013/deactivate-test HTTP/1.1

@@ -69,16 +69,22 @@ export class AuctionService extends AbstractService {
     return this.remove(auctionId)
   }
 
-  async checkActiveAuctions(): Promise<void> {
+  private async checkActiveAuctions(): Promise<void> {
+    Logger.log('Checking active auctions')
     try {
       const auctions = (await this.auctionRepository.find({
         where: { is_active: true },
+        relations: ['bids', 'bids.owner', 'owner'],
       })) as Auction[]
 
-      auctions.forEach((auction) => {
-        auction.checkAndUpdateAuctionStatus()
-      })
-      await this.auctionRepository.save(auctions)
+      for (const auction of auctions) {
+        const statusUpdated = auction.checkAndUpdateAuctionStatus()
+        Logger.log(statusUpdated)
+        if (statusUpdated) {
+          await this.auctionRepository.save(auction)
+          await this.createNotifications(auction.id)
+        }
+      }
     } catch (error) {
       throw new InternalServerErrorException(error)
     }
@@ -175,6 +181,7 @@ export class AuctionService extends AbstractService {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided.')
     return this.bidRepository
       .createQueryBuilder('bid')
+      .leftJoinAndSelect('bid.owner', 'owner')
       .where('bid.auction_id = :auctionId', { auctionId })
       .orderBy('bid.amount', 'DESC')
       .getOne()
@@ -191,10 +198,10 @@ export class AuctionService extends AbstractService {
 
   async createNotifications(auctionId: string): Promise<void> {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided')
-    const auction = await this.findById(auctionId, ['bids', 'bids.owner'])
+    const auction = await this.findById(auctionId, ['bids', 'bids.owner', 'owner'])
     if (!auction) throw new NotFoundException('Auction not found')
     if (auction.is_active) throw new BadRequestException('Auction is still active')
-    if (auction.bids.length === 0) throw new BadRequestException('Auction had no bids')
+    if (auction.bids.length === 0) return
     const highestBid = await this.findHighestBid(auctionId)
     await this.sendNotification(highestBid.owner, auction, true)
     const notificationPromises = auction.bids
@@ -216,5 +223,26 @@ export class AuctionService extends AbstractService {
     } catch (error) {
       Logger.error(`Failed to send notification to user ${recipient.id}: ${error.message}`)
     }
+  }
+
+  async findUserNotifications(userId: string): Promise<Notification[]> {
+    if (!userId) throw new BadRequestException('User ID must be provided.')
+    try {
+      await this.checkActiveAuctions()
+      const activeUserNotifications = (await this.notificationRepository.find({
+        where: { recipient: { id: userId } },
+        relations: ['auction'],
+      })) as Notification[]
+      return activeUserNotifications
+    } catch (error) {
+      throw new InternalServerErrorException(error)
+    }
+  }
+
+  async deactivateAuction(auctionId: string): Promise<Auction> {
+    if (!auctionId) throw new BadRequestException('Auction ID must be provided')
+    const auction: Auction = await this.findById(auctionId, ['bids', 'bids.owner'])
+    auction.end_date = '2023-12-17T03:24:00'
+    return this.auctionRepository.save(auction)
   }
 }
