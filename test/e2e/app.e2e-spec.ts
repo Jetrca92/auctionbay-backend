@@ -883,8 +883,7 @@ describe('App E2E', () => {
         })
         .expectStatus(200)
         .returns('body')
-
-      console.log(notificationsResponse.body)
+      console.log(notificationsResponse)
     })
   })
 })

@@ -72,6 +72,13 @@ export class AuctionController {
   }
 
   @UseGuards(AuthGuard('jwt'))
+  @Patch('/me/notifications/:id/read')
+  @HttpCode(HttpStatus.OK)
+  async markAsRead(@Param('id') id: string) {
+    return this.auctionService.markAsRead(id)
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('me/auction')
   @HttpCode(HttpStatus.CREATED)
   async create(@Body() createAuctionDto: CreateAuctionDto, @GetCurrentUserById() userId: string): Promise<Auction> {

@@ -48,7 +48,10 @@ export class AuctionService extends AbstractService {
   async update(auctionId: string, userId: string, updateAuctionDto: UpdateAuctionDto): Promise<Auction> {
     if (!auctionId || !userId) throw new BadRequestException('Auction and User ID must be provided')
     try {
-      const auction = (await this.findById(auctionId, ['owner'])) as Auction
+      const auction = (await this.auctionRepository.findOne({
+        where: { id: auctionId },
+        relations: ['owner'],
+      })) as Auction
       if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
       if (auction.owner.id !== userId) throw new ForbiddenException('You are not the owner of this auction')
       Object.assign(auction, updateAuctionDto)
@@ -63,7 +66,10 @@ export class AuctionService extends AbstractService {
 
   async handleDelete(auctionId: string, userId: string): Promise<Auction> {
     if (!auctionId || !userId) throw new BadRequestException('Auction and User ID must be provided')
-    const auction = (await this.findById(auctionId, ['owner'])) as Auction
+    const auction = (await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['owner'],
+    })) as Auction
     if (!auction) throw new NotFoundException(`Auction with ID ${auctionId} not found`)
     if (auction.owner.id !== userId) throw new ForbiddenException('You are notthe owner of this auction')
     return this.remove(auctionId)
@@ -190,7 +196,9 @@ export class AuctionService extends AbstractService {
   async updateAuctionImageUrl(auctionId: string, image: string): Promise<Auction> {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided')
     if (!image) throw new BadRequestException('Image must be provided')
-    const auction = await this.findById(auctionId)
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+    })
     if (!auction) throw new NotFoundException('Auction not found')
     auction.image = image
     return this.auctionRepository.save(auction)
@@ -198,7 +206,10 @@ export class AuctionService extends AbstractService {
 
   async createNotifications(auctionId: string): Promise<void> {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided')
-    const auction = await this.findById(auctionId, ['bids', 'bids.owner', 'owner'])
+    const auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['bids', 'bids.owner', 'owner'],
+    })
     if (!auction) throw new NotFoundException('Auction not found')
     if (auction.is_active) throw new BadRequestException('Auction is still active')
     if (auction.bids.length === 0) return
@@ -231,7 +242,7 @@ export class AuctionService extends AbstractService {
       await this.checkActiveAuctions()
       const activeUserNotifications = (await this.notificationRepository.find({
         where: { recipient: { id: userId } },
-        relations: ['auction'],
+        relations: ['auction', 'auction.bids'],
       })) as Notification[]
       return activeUserNotifications
     } catch (error) {
@@ -241,8 +252,18 @@ export class AuctionService extends AbstractService {
 
   async deactivateAuction(auctionId: string): Promise<Auction> {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided')
-    const auction: Auction = await this.findById(auctionId, ['bids', 'bids.owner'])
+    const auction: Auction = await this.auctionRepository.findOne({
+      where: { id: auctionId },
+      relations: ['bids', 'bids.owner'],
+    })
     auction.end_date = '2023-12-17T03:24:00'
     return this.auctionRepository.save(auction)
+  }
+
+  async markAsRead(id: string): Promise<Notification> {
+    if (!id) throw new BadRequestException('Notification ID must be provided.')
+    const notification: Notification = await this.notificationRepository.findOne({ where: { id } })
+    notification.is_read = true
+    return this.notificationRepository.save(notification)
   }
 }
