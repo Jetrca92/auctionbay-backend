@@ -241,7 +241,10 @@ export class AuctionService extends AbstractService {
     try {
       await this.checkActiveAuctions()
       const activeUserNotifications = (await this.notificationRepository.find({
-        where: { recipient: { id: userId } },
+        where: {
+          recipient: { id: userId },
+          is_read: false,
+        },
         relations: ['auction', 'auction.bids'],
       })) as Notification[]
       return activeUserNotifications
