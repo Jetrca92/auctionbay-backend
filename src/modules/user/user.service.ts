@@ -31,23 +31,28 @@ export class UserService extends AbstractService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    if (!updateUserDto.password) throw new BadRequestException('Password must be provided')
-    const user = (await this.findById(id)) as User
+    if (!updateUserDto.password) {
+      throw new BadRequestException('Password must be provided')
+    }
+    const user = (await this.userRepository.findOne({ where: { id: id } })) as User
     const { email, password, confirm_password } = updateUserDto
     if (user.email !== email && email) {
       user.email = email
     }
     if (password && confirm_password) {
       if (password !== confirm_password) {
+        Logger.log('Passwords do not match')
         throw new BadRequestException('Passwords do not match')
       }
       const isSamePassword = await compareHash(password, user.password)
       if (isSamePassword) {
+        Logger.log('New password cannot be the same as your old password')
         throw new BadRequestException('New password cannot be the same as your old password.')
       }
       user.password = await hash(password)
     }
     try {
+      Logger.log('Updated password')
       return await this.userRepository.save(user)
     } catch (error) {
       Logger.error('Error updating user')
