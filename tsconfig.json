@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,
@@ -8,8 +9,16 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2021",
     "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
+    "outDir": "dist",
+    "baseUrl": "./src",
+    "paths": {
+      "config/*": ["config/*"],
+      "decorators/*": ["decorators/*"],
+      "entities/*": ["entities/*"],
+      "helpers/*": ["helpers/*"],
+      "interfaces/*": ["interfaces/*"],
+      "utils/*": ["utils/*"]
+    },
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,

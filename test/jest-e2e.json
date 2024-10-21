@@ -4,6 +4,16 @@
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(ts)$": "ts-jest"
+  },
+  "moduleDirectories": ["node_modules", "src"],
+  "moduleNameMapper": {
+    "^config/(.*)$": "<rootDir>../src/config/$1",
+    "^decorators/(.*)$": "<rootDir>../src/decorators/$1",
+    "^entities/(.*)$": "<rootDir>../src/entities/$1",
+    "^helpers/(.*)$": "<rootDir>../src/helpers/$1",
+    "^interfaces/(.*)$": "<rootDir>../src/interfaces/$1",
+    "^utils/(.*)$": "<rootDir>../src/utils/$1"
+  },
+  "testPathIgnorePatterns": ["/node_modules/", "/dist/"]
 }

@@ -1,0 +1,1 @@
+npm run code:format && git add .
