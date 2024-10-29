@@ -2,7 +2,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm'
 import { Base } from './base.entity'
 import { User } from './user.entity'
 import { Bid } from './bid.entity'
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator'
+import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString } from 'class-validator'
 
 @Entity()
 export class Auction extends Base {
@@ -23,7 +23,7 @@ export class Auction extends Base {
   starting_price: number
 
   @Column()
-  @IsString()
+  @IsDateString()
   end_date: string
 
   @Column({ default: true })
