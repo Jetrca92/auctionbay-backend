@@ -16,7 +16,7 @@ export const ORMConfig = async (configService: ConfigService): Promise<Connectio
     password: configService.get('DATABASE_PWD'),
     database: configService.get('DATABASE_NAME'),
     entities: [isTestStage ? 'src/**/*.entity.ts' : 'dist/**/*.entity.js'],
-    synchronize: true, // set to false in production
+    synchronize: false,
     ssl: false,
   }
 }
