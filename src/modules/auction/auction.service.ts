@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import { Auction } from 'entities/auction.entity'
 import { AbstractService } from 'modules/common/abstract.service'
 import { CreateAuctionDto } from 'modules/auction/dto/create-auction.dto'
-import { Repository } from 'typeorm'
+import { DataSource, EntityManager, Repository } from 'typeorm'
 import { User } from 'entities/user.entity'
 import { UpdateAuctionDto } from './dto/update-auction.dto'
 import { CreateBidDto } from './dto/create-bid.dto'
@@ -20,6 +20,7 @@ import { Notification } from 'entities/notification.entity'
 @Injectable()
 export class AuctionService extends AbstractService {
   constructor(
+    private readonly dataSource: DataSource,
     @InjectRepository(Auction) private readonly auctionRepository: Repository<Auction>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Bid) private readonly bidRepository: Repository<Bid>,
@@ -77,23 +78,25 @@ export class AuctionService extends AbstractService {
 
   private async checkActiveAuctions(): Promise<void> {
     Logger.log('Checking active auctions')
-    try {
-      const auctions = (await this.auctionRepository.find({
-        where: { is_active: true },
-        relations: ['bids', 'bids.owner', 'owner'],
-      })) as Auction[]
+    await this.dataSource.transaction(async (manager) => {
+      try {
+        const auctions = (await manager.find(Auction, {
+          where: { is_active: true },
+          relations: ['bids', 'bids.owner', 'owner'],
+        })) as Auction[]
 
-      for (const auction of auctions) {
-        const statusUpdated = auction.checkAndUpdateAuctionStatus()
-        Logger.log(statusUpdated)
-        if (statusUpdated) {
-          await this.auctionRepository.save(auction)
-          await this.createNotifications(auction.id)
+        for (const auction of auctions) {
+          const statusUpdated = auction.checkAndUpdateAuctionStatus()
+          Logger.log(statusUpdated)
+          if (statusUpdated) {
+            await manager.save(auction)
+            await this.createNotificationsInTransaction(manager, auction.id)
+          }
         }
+      } catch (error) {
+        throw new InternalServerErrorException(error)
       }
-    } catch (error) {
-      throw new InternalServerErrorException(error)
-    }
+    })
   }
 
   async findAuctions(): Promise<Auction[]> {
@@ -204,15 +207,16 @@ export class AuctionService extends AbstractService {
     return this.auctionRepository.save(auction)
   }
 
-  async createNotifications(auctionId: string): Promise<void> {
+  async createNotificationsInTransaction(manager: EntityManager, auctionId: string): Promise<void> {
     if (!auctionId) throw new BadRequestException('Auction ID must be provided')
-    const auction = await this.auctionRepository.findOne({
+    const auction = await manager.findOne(Auction, {
       where: { id: auctionId },
       relations: ['bids', 'bids.owner', 'owner'],
     })
     if (!auction) throw new NotFoundException('Auction not found')
     if (auction.is_active) throw new BadRequestException('Auction is still active')
     if (auction.bids.length === 0) return
+
     const highestBid = await this.findHighestBid(auctionId)
     await this.sendNotification(highestBid.owner, auction, true)
     const notificationPromises = auction.bids
